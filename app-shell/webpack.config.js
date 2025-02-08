@@ -4,6 +4,16 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 // const ExternalTemplateRemotesPlugin = require("external-remotes-plugin");
 const { ModuleFederationPlugin } = require("@module-federation/enhanced/webpack");
 
+const cacheGroups = () => ({
+  // The cache-group key is like a prefix. To capture all matching modules in
+  // one file, set `name` of the cache-group as well.
+  commons: {
+    name: "commons-react",
+    chunks: "all",
+    test: /[\\/]node_modules[\\/](?:react(?:-dom)?|scheduler)/,
+  },
+});
+
 module.exports = {
   entry: {
     app: "./src/index",
@@ -31,18 +41,11 @@ module.exports = {
   optimization: {
     splitChunks: {
       // chunks: "all",
-      cacheGroups: {
-        app: {
-          name: "app",
-          chunks: "all",
-	        test: /[\\/]node_modules[\\/](?:react(?:-dom)?|scheduler)/,
-	      },
-      },
+      cacheGroups: cacheGroups(),
     },
   },
   plugins: [
     new HtmlWebpackPlugin({ template: "./public/index.html" }),
-    // new ExternalTemplateRemotesPlugin(),
     new ModuleFederationPlugin({
       name: "app-shell",
       shared: {
@@ -55,9 +58,13 @@ module.exports = {
       },
       experiments: {
         federationRuntime: "hoisted",
-        // provideExternalRuntime: true,
+        provideExternalRuntime: true,
       },
     }),
+
+    // Does not seem to work with the enhanced version.
+    // Consider cache control on the remote entry.
+    // new ExternalTemplateRemotesPlugin(),
   ],
 };
 
